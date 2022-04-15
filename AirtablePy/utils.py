@@ -24,9 +24,10 @@
 
 """
 # Python Dependencies
+import pandas as pd
 import requests
 
-from typing import Any, Union
+from typing import Any, List, Union
 from pandas import DataFrame
 
 
@@ -38,7 +39,7 @@ _VALID_KEY_PREFIX = {
 }
 
 
-def convert_upload(data: Union[dict, DataFrame], typecast: bool = True) -> dict:
+def convert_upload(data: Union[dict, DataFrame], typecast: bool = True) -> List[dict]:
     """Returns the Corrected pre-json Formatted dictionary from data.
 
     Args:
@@ -46,21 +47,37 @@ def convert_upload(data: Union[dict, DataFrame], typecast: bool = True) -> dict:
         typecast (bool): Data is coerced to correct type during upload if True (Recommended).
 
     Returns:
-        (dict) Data as a dictionary in correct airtable pre-json format suitable to upload
-        to airtable after json.dumps().
+        (list) Data as a list of chunked out dictionary record fields in correct airtable pre-json
+        format suitable for batch upload to airtable after json.dumps().
 
     Raises:
         ValueError: Invalid Data Type (i.e. not dict or DataFrame)
 
     """
     if isinstance(data, dict):
-        return {"records": [{"fields": data}], "typecast": typecast}
+        try:
+            # format: {column1: [...], column2: [...], ...}
+            data = pd.DataFrame(data)
+        except ValueError:
+            # format: {column1: value1, column2: value2, ...}
+            return [construct_record([data], typecast)]
 
-    elif isinstance(data, DataFrame):
-        return {"records": [{"fields": data.to_dict(orient="records")[0]}], "typecast": typecast}
+    if isinstance(data, DataFrame):
+        return [construct_record(i, typecast) for i in parcels(data.to_dict("records"))]
 
     else:
         raise ValueError(f"Invalid Data Format for Upload: {type(data)}")
+
+
+def parcels(iterable: list, chunks: int = 10) -> list:
+    """Meter out an iterable object by defined chunk size (i.e. api upload limit)"""
+    for i in range(0, len(iterable), chunks):
+        yield iterable[i: i + chunks]
+
+
+def construct_record(chunk: List[dict], typecast: bool) -> dict:
+    """Transforms data to prepare for load to airtable."""
+    return {"records": [{"fields": i} for i in chunk], "typecast": typecast}
 
 
 def check_key(key: str, key_type: str) -> None:
@@ -77,7 +94,7 @@ def check_key(key: str, key_type: str) -> None:
         (None) when key meets formatting conventions.
 
     """
-    if key is None or not isinstance(key, str):
+    if not isinstance(key, str):
         raise ValueError(f"Invalid Key Type: {key} ({type(key)})")
 
     if len(key) != 17:
@@ -101,25 +118,22 @@ def get_key(response: Union[requests.models.Response, dict], key: str) -> Any:
         return response.get(key)
 
 
-def inject_record_id(data: dict, record_id: str) -> None:
+def retrieve_ids(response: List[requests.models.Response]) -> List[str]:
+    """Retrieves the RecordIDs of a list of requests."""
+    return [rec["id"] for r in response for rec in get_key(r, "records")]
+
+
+def inject_record_id(data: dict, record_id: str, index: int = 0) -> None:
     """Injects the RecordID inplace into a formatted dictionary to update an existing record.
 
     Args:
         data (dict): formatted data dictionary
         record_id (str): Airtable Record ID
+        index (int): Index of record to inject (important in batches)
 
     Returns:
         (None)
 
     """
     check_key(record_id, "Record ID")
-    get_key(data, "records")[0].update({"id": record_id})
-
-
-def get_response(session: requests.Session, method: str, **kwargs) -> requests.models.Response:
-    """Interfaces between Request sessions or requests library and appropriate methods."""
-    try:
-        return getattr(session, method)(**kwargs)
-
-    except AttributeError:
-        return getattr(requests, method)(**kwargs)
+    get_key(data, "records")[index].update({"id": record_id})
