@@ -41,4 +41,7 @@ def test_check_key(key, n, _type):
     ([{"A": 1, "B": 2}], False, {"records": [{"fields": {"A": 1, "B": 2}}], "typecast": False}),
 ])
 def test_construct_record(data, typecast, expected):
-    assert utils.construct_record(data, typecast) == expected
+    ret_val = utils.construct_record(data, typecast)
+    assert ret_val["records"][0]["fields"] == data[0]
+    assert ret_val["typecast"] == typecast
+    assert ret_val == expected
