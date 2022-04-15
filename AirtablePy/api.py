@@ -166,7 +166,7 @@ class AirtableAPI:
             - Submitting a Request Multiple times will create multiple (duplicated) entries.
 
         """
-        data = convert_upload(data, typecast, self.apiRateLimit)
+        data = convert_upload(data=data, typecast=typecast, limit=self.apiRateLimit)
         responses = []
         for d in data:
             response = self.session.post(
