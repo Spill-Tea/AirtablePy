@@ -166,7 +166,7 @@ class AirtableAPI:
             - Submitting a Request Multiple times will create multiple (duplicated) entries.
 
         """
-        data = convert_upload(data, typecast)
+        data = convert_upload(data, typecast, self.apiRateLimit)
         responses = []
         for d in data:
             response = self.session.post(
@@ -203,7 +203,7 @@ class AirtableAPI:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
-        _data = convert_upload(data=data, typecast=typecast)
+        _data = convert_upload(data=data, typecast=typecast, limit=self.apiRateLimit)
         responses = []
 
         if modify:
@@ -256,7 +256,7 @@ class AirtableAPI:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
-        _data = convert_upload(data=data, typecast=typecast)
+        _data = convert_upload(data=data, typecast=typecast, limit=self.apiRateLimit)
 
         responses = []
         count = 0

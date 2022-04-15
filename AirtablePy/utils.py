@@ -39,7 +39,7 @@ _VALID_KEY_PREFIX = {
 }
 
 
-def convert_upload(data: Union[dict, DataFrame], typecast: bool = True) -> List[dict]:
+def convert_upload(data: Union[dict, DataFrame], typecast: bool, limit: int = 10) -> List[dict]:
     """Returns the Corrected pre-json Formatted dictionary from data.
 
     Args:
@@ -63,7 +63,7 @@ def convert_upload(data: Union[dict, DataFrame], typecast: bool = True) -> List[
             return [construct_record([data], typecast)]
 
     if isinstance(data, DataFrame):
-        return [construct_record(i, typecast) for i in parcels(data.to_dict("records"))]
+        return [construct_record(i, typecast) for i in parcels(data.to_dict("records"), limit)]
 
     else:
         raise ValueError(f"Invalid Data Format for Upload: {type(data)}")
