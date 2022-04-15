@@ -24,7 +24,6 @@
 
 """
 # Python Dependencies
-import pandas as pd
 import requests
 
 from typing import Any, List, Union
@@ -45,6 +44,7 @@ def convert_upload(data: Union[dict, DataFrame], typecast: bool, limit: int = 10
     Args:
         data (dict | pd.DataFrame): Data for a Single Record where the Keys are organized by column.
         typecast (bool): Data is coerced to correct type during upload if True (Recommended).
+        limit (int): number of records per parcel (i.e. api rate limit)
 
     Returns:
         (list) Data as a list of chunked out dictionary record fields in correct airtable pre-json
@@ -56,10 +56,10 @@ def convert_upload(data: Union[dict, DataFrame], typecast: bool, limit: int = 10
     """
     if isinstance(data, dict):
         try:
-            # format: {column1: [...], column2: [...], ...}
-            data = pd.DataFrame(data)
+            # format: {col1: [v1, v2, v3, ...], col2: [v1, v2, v3, ...], ...}
+            data = DataFrame(data)
         except ValueError:
-            # format: {column1: value1, column2: value2, ...}
+            # format: {col1: value1, col2: value2, ...}
             return [construct_record([data], typecast)]
 
     if isinstance(data, DataFrame):
