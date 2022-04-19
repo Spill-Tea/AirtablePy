@@ -9,6 +9,7 @@ from string import ascii_letters
 
 from AirtablePy import utils
 
+
 # Global Variable
 FAILURE = pytest.mark.xfail(raises=ValueError)
 

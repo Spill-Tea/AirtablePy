@@ -26,6 +26,7 @@ def test_formula(value, expected):
     ("DATETIME_PARSE(val1, val2)", "DATETIME_PARSE(val1, val2)"),
     ("RECORD_ID()", "RECORD_ID()"),
     ("date", "{date}"),
+    ("example", "{example}")
 ])
 def test_column(value, expected):
     assert query.is_column(value) == expected
