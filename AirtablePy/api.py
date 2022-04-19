@@ -28,13 +28,12 @@ import os
 import json
 import requests
 
-from io import StringIO
 from typing import List, Optional, Tuple, Union
 from pandas import DataFrame
 
 from .utils import check_key
 from .utils import get_key
-from .utils import get_response
+from .utils import parcels
 from .utils import convert_upload
 from .utils import inject_record_id
 
@@ -46,27 +45,42 @@ class AirtableAPI:
         token (str): Airtable API authorization token
         timeout (Tuple[float, float] | float): timeout specification for connecting and reading
             requests. See the following for more details:
-                - https://docs.python-requests.org/en/master/user/advanced/#timeouts
+            - https://docs.python-requests.org/en/master/user/advanced/#timeouts
         version (str): API version (currently v0 by default)
-        environment_variable (str): Environment Variable to retrieve if token is None.
 
     """
+    maxUpload = 10  # 10 records may be uploaded at a time at maximum
+    apiRateLimit = 5  # Rate Limit is 5 submissions per second (1 / 0.2s)
+    _base_url = "https://api.airtable.com/"
 
     def __init__(self,
                  token: Optional[str] = None,
                  timeout: Optional[Union[Tuple[float, float], float]] = None,
-                 environment_variable: str = "AIRTABLE_AUTH_TOKEN",
                  version: str = "v0",
                  ) -> None:
-        self._token = token or os.getenv(environment_variable)
-        check_key(self._token, "API Key")
-
+        self.session = requests.Session()
+        self.token = token
         self.timeout = timeout
-        self._header = {
-            "Authorization": f"Bearer {self._token}",
+
+        self.base_url = f"{self._base_url}{version}/"
+
+    @property
+    def token(self):
+        return self._token
+
+    @token.setter
+    def token(self, value):
+        value = value or os.environ.get("AIRTABLE_API_TOKEN")
+        check_key(value, "API Key")
+        self._update_header(value)
+        self._token = value
+
+    def _update_header(self, value):
+        self.session.headers.update({
+            "Authorization": f"Bearer {value}",
             "Content-Type": "application/json"
         }
-        self.base_url = f"https://api.airtable.com/{version}/"
+        )
 
     def construct_url(self, base_id: str, table_id: str, record_id: Optional[str] = None) -> str:
         """Constructs a Valid Airtable API Link either to a table or record.
@@ -111,68 +125,30 @@ class AirtableAPI:
         """
         data = []
 
-        with requests.session() as s:
-            while 1:
-                response = self.fetch(
-                    url=url,
-                    n_records=n_records,
+        while 1:
+            response = self.session.get(
+                url=url,
+                params=dict(
+                    maxRecords=n_records,
                     offset=offset,
-                    query=query,
+                    filterByFormula=query,
                     fields=fields,
-                    session=s,
-                    **kwargs
-                )
-                offset = get_key(response, "offset")
-                data.extend(get_key(response, "records"))
+                ),
+                timeout=self.timeout,
+                **kwargs
+            )
+            offset = get_key(response, "offset")
+            data.extend(get_key(response, "records"))
 
-                if offset is None:
-                    break
+            if offset is None:
+                break
 
         return data
 
-    def fetch(self,
-              url: str,
-              n_records: Optional[int] = None,
-              offset: Optional[str] = None,
-              query: Optional[str] = None,
-              fields: Optional[List[str]] = None,
-              session: Optional[requests.Session] = None,
-              **kwargs
-              ) -> requests.models.Response:
-        """Fetches a Page of results (or a single record) from a table.
-
-        Args:
-            url (str): Valid Airtable link
-            n_records (int): Number of Records to retrieve (If None, all are retrieved)
-            offset (str): Optional Number of Records to offset to retrieve.
-            query (str): Optional A Valid Airtable Formatted Query to filter results
-            fields (list): Optional list of column names to limit return
-
-        Returns:
-            (requests.models.Response) A Single Page of Results from a table.
-
-        """
-
-        return get_response(
-            session,
-            "get",
-            url=url,
-            headers=self._header,
-            params=dict(
-                maxRecords=n_records,
-                offset=offset,
-                filterByFormula=query,
-                fields=fields,
-            ),
-            timeout=self.timeout,
-            **kwargs
-        )
-
     def push(self,
              url: str,
-             data: Union[str, dict, DataFrame],
+             data: Union[dict, DataFrame],
              typecast: bool = True,
-             session: Optional[requests.Session] = None,
              **kwargs
              ):
         """Posts a Single Record to Airtable.
@@ -181,7 +157,6 @@ class AirtableAPI:
             url (str): Valid Airtable Base
             data (str | dict | DataFrame): _
             typecast (bool): Coerce data type to cast during upload.
-            session (requests.Session): request session which can be useful for iterative submissions.
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.post method.
 
         Returns:
@@ -191,37 +166,32 @@ class AirtableAPI:
             - Submitting a Request Multiple times will create multiple (duplicated) entries.
 
         """
-        if isinstance(data, (dict, DataFrame)):
-            data = json.dumps(convert_upload(data, typecast))
-
-        return get_response(
-            session,
-            "post",
-            url=url,
-            data=data,
-            headers=self._header,
-            timeout=self.timeout,
-            **kwargs
-        )
+        data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
+        responses = []
+        for d in data:
+            response = self.session.post(
+                url=url,
+                data=json.dumps(d),
+                timeout=self.timeout,
+                **kwargs
+            )
+            responses.append(response)
+        return responses
 
     def update(self,
                url: str,
-               data: Union[str, dict, DataFrame],
-               record_id: str,
-               modify: bool = True,
+               data: Union[dict, DataFrame],
+               record_id: List[str],
                typecast: bool = True,
-               session: Optional[requests.Session] = None,
                **kwargs
-               ) -> requests.models.Response:
+               ) -> List[requests.models.Response]:
         """Modifies a Single existing Record inplace.
 
         Args:
             url (str): Valid Airtable Base
-            data (str | dict | DataFrame): _
+            data (dict | DataFrame): data to update
             typecast (bool): Coerce data type to cast during upload.
             record_id (str): Valid Record ID
-            modify (bool): If true, inject record id into data for upload compatibility.
-            session (requests.Session): request session which can be useful for iterative submissions.
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
 
         Returns:
@@ -231,46 +201,39 @@ class AirtableAPI:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
-        if isinstance(data, str):
-            _data = json.load(StringIO(data))
+        _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
+        responses = []
 
-        elif isinstance(data, (dict, DataFrame)):
-            _data = convert_upload(data=data, typecast=typecast)
+        count = 0
+        for d in _data:
+            for idx in range(len(get_key(d, "records"))):
+                inject_record_id(data=d, record_id=record_id[count + idx], index=idx)
 
-        else:
-            raise ValueError(f"Unsupported Data Format: {type(data)}")
+            response = self.session.patch(
+                url=url,
+                data=json.dumps(d),
+                timeout=self.timeout,
+                **kwargs
+            )
+            responses.append(response)
+            count += self.maxUpload
 
-        if modify:
-            inject_record_id(data=_data, record_id=record_id)
-
-        return get_response(
-            session,
-            "patch",
-            url=url,
-            data=json.dumps(_data),
-            headers=self._header,
-            timeout=self.timeout,
-            **kwargs
-        )
+        return responses
 
     def replace(self,
                 url: str,
-                data: Union[str, dict, DataFrame],
-                record_id: str,
-                modify: bool = True,
+                data: Union[dict, DataFrame],
+                record_id: List[str],
                 typecast: bool = True,
-                session: Optional[requests.Session] = None,
                 **kwargs
-                ) -> requests.models.Response:
+                ) -> List[requests.models.Response]:
         """Overwrites an existing Record.
 
         Args:
             url (str): Valid Airtable Base
-            data (str | dict | DataFrame): _
+            data (dict | DataFrame): _
             typecast (bool): Coerce data type to cast during upload.
-            record_id (str): Valid Record ID
-            modify (bool): If true, inject record id into data for upload compatibility.
-            session (requests.Session): request session which can be useful for iterative submissions.
+            record_id (list): Valid Record ID(s)
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
 
         Returns:
@@ -280,40 +243,34 @@ class AirtableAPI:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
-        if isinstance(data, str):
-            _data = json.load(StringIO(data))
+        _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
 
-        elif isinstance(data, (dict, DataFrame)):
-            _data = convert_upload(data=data, typecast=typecast)
+        responses = []
+        count = 0
+        for d in _data:
+            for idx in range(len(get_key(d, "records"))):
+                inject_record_id(data=d, record_id=record_id[count + idx], index=idx)
+            response = self.session.put(
+                url=url,
+                data=json.dumps(d),
+                timeout=self.timeout,
+                **kwargs
+            )
+            responses.append(response)
+            count += self.maxUpload
 
-        else:
-            raise ValueError(f"Unsupported Data Format: {type(data)}")
-
-        if modify:
-            inject_record_id(data=_data, record_id=record_id)
-
-        return get_response(
-            session,
-            "put",
-            url=url,
-            data=json.dumps(_data),
-            headers=self._header,
-            timeout=self.timeout,
-            **kwargs
-        )
+        return responses
 
     def delete(self,
                url: str,
-               record_id: Optional[str] = None,
-               session: Optional[requests.Session] = None,
+               record_id: List[str],
                **kwargs,
-               ) -> requests.models.Response:
-        """Deletes a Record from Airtable.
+               ) -> Union[requests.models.Response, List[requests.models.Response]]:
+        """Deletes a Record(s) from Airtable.
 
         Args:
             url (str): Valid Airtable Base or record
-            record_id (str): Valid Record ID (Required if not already present on provided url)
-            session (requests.Session): request session which can be useful for iteration.
+            record_id (list): List of Valid Record ID(s)
 
         Returns:
             (requests.models.Response)
@@ -323,14 +280,16 @@ class AirtableAPI:
             as None.
 
         """
-        if record_id is not None:
-            url = f"{url}{record_id}" if url.endswith("/") else f"{url}/{record_id}"
 
-        return get_response(
-            session,
-            "delete",
-            url=url,
-            headers=self._header,
-            timeout=self.timeout,
-            **kwargs
-        )
+        responses = []
+
+        for j in parcels(record_id, self.maxUpload):
+            response = self.session.delete(
+                url=url,
+                timeout=self.timeout,
+                params={"records": j},
+                **kwargs
+            )
+            responses.append(response)
+
+        return responses
