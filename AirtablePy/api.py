@@ -275,7 +275,7 @@ class AirtableAPI:
                url: str,
                record_id: List[str],
                **kwargs,
-               ) -> Union[requests.models.Response, List[requests.models.Response]]:
+               ) -> List[requests.models.Response]:
         """Deletes a Record(s) from Airtable.
 
         Args:
