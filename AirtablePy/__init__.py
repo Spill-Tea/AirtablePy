@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """
-    AirtablePy
+    Spill-Tea/AirtablePy
 
 """
 from .api import AirtableAPI
@@ -28,5 +28,9 @@ from .query import date_query
 from .utils import check_key
 from .utils import convert_upload
 from .utils import get_key
+from .utils import from_records
+from .utils import retrieve_keys
 
 __all__ = [i for i in dir() if not i.startswith("_")]
+
+__version__ = "0.01.01"
