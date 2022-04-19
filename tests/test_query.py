@@ -5,11 +5,9 @@
 # Python Dependencies
 import pytest
 
+from .helpers import FAILURE
+
 from AirtablePy import query
-
-
-# Global Variable
-FAILURE = pytest.mark.xfail(raises=ValueError)
 
 
 @pytest.mark.parametrize("value, expected", [
