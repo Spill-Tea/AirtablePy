@@ -118,9 +118,18 @@ def get_key(response: Union[requests.models.Response, dict], key: str) -> Any:
         return response.get(key)
 
 
-def retrieve_ids(response: List[requests.models.Response]) -> List[str]:
-    """Retrieves the RecordIDs of a list of requests."""
-    return [rec["id"] for r in response for rec in get_key(r, "records")]
+def retrieve_keys(response: List[requests.models.Response], key: str) -> list:
+    """Retrieves a key from a list of requests.
+
+    Args:
+        response (list): list of request responses.
+        key (str): valid key from response. e.g. "id", "createdTime" or "fields"
+
+    Returns:
+        (list) list of key values from a list of responses
+
+    """
+    return [rec[key] for r in response for rec in get_key(r, "records")]
 
 
 def inject_record_id(data: dict, record_id: str, index: int = 0) -> None:
@@ -132,8 +141,22 @@ def inject_record_id(data: dict, record_id: str, index: int = 0) -> None:
         index (int): Index of record to inject (important in batches)
 
     Returns:
-        (None)
+        (None) the data is modified inplace to include the record id.
 
     """
     check_key(record_id, "Record ID")
     get_key(data, "records")[index].update({"id": record_id})
+
+
+def from_records(data: List[dict]) -> DataFrame:
+    """Converts data from a list or records into a pandas dataframe."""
+    records = []
+    for d in data:
+        temp = get_key(d, "fields")
+        temp.update({
+            "id": get_key(d, "id"),
+            "createdTime": get_key(d, "createdTime")
+        })
+        records.append(temp)
+
+    return DataFrame.from_records(records)
