@@ -50,7 +50,7 @@ class AirtableAPI:
 
     """
     maxUpload = 10  # 10 records may be uploaded at a time at maximum
-    apiRateLimit = 5  # Rate Limit is 5 submissions per second (0.2s)
+    apiRateLimit = 5  # Rate Limit is 5 submissions per second (1 / 0.2s)
     _base_url = "https://api.airtable.com/"
 
     def __init__(self,
@@ -166,7 +166,7 @@ class AirtableAPI:
             - Submitting a Request Multiple times will create multiple (duplicated) entries.
 
         """
-        data = convert_upload(data=data, typecast=typecast, limit=self.apiRateLimit)
+        data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
         for d in data:
             response = self.session.post(
@@ -181,8 +181,7 @@ class AirtableAPI:
     def update(self,
                url: str,
                data: Union[dict, DataFrame],
-               record_id: str,
-               modify: bool = True,
+               record_id: List[str],
                typecast: bool = True,
                **kwargs
                ) -> List[requests.models.Response]:
@@ -193,7 +192,6 @@ class AirtableAPI:
             data (dict | DataFrame): data to update
             typecast (bool): Coerce data type to cast during upload.
             record_id (str): Valid Record ID
-            modify (bool): If true, inject record id into data for upload compatibility.
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
 
         Returns:
@@ -203,31 +201,22 @@ class AirtableAPI:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
-        _data = convert_upload(data=data, typecast=typecast, limit=self.apiRateLimit)
+        _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
 
-        if modify:
-            for d in range(len(_data)):
-                for idx in range(len(_data[d])):
-                    inject_record_id(data=_data[d], record_id=record_id, index=idx)
+        count = 0
+        for d in _data:
+            for idx in range(len(get_key(d, "records"))):
+                inject_record_id(data=d, record_id=record_id[count + idx], index=idx)
 
-                response = self.session.patch(
-                    url=url,
-                    data=json.dumps(_data[d]),
-                    timeout=self.timeout,
-                    **kwargs
-                )
-                responses.append(response)
-
-        else:
-            for d in _data:
-                response = self.session.patch(
-                    url=url,
-                    data=json.dumps(d),
-                    timeout=self.timeout,
-                    **kwargs
-                )
-                responses.append(response)
+            response = self.session.patch(
+                url=url,
+                data=json.dumps(d),
+                timeout=self.timeout,
+                **kwargs
+            )
+            responses.append(response)
+            count += self.maxUpload
 
         return responses
 
@@ -235,7 +224,6 @@ class AirtableAPI:
                 url: str,
                 data: Union[dict, DataFrame],
                 record_id: List[str],
-                modify: bool = True,
                 typecast: bool = True,
                 **kwargs
                 ) -> List[requests.models.Response]:
@@ -245,8 +233,7 @@ class AirtableAPI:
             url (str): Valid Airtable Base
             data (dict | DataFrame): _
             typecast (bool): Coerce data type to cast during upload.
-            record_id (str): Valid Record ID
-            modify (bool): If true, inject record id into data for upload compatibility.
+            record_id (list): Valid Record ID(s)
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
 
         Returns:
@@ -256,14 +243,13 @@ class AirtableAPI:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
-        _data = convert_upload(data=data, typecast=typecast, limit=self.apiRateLimit)
+        _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
 
         responses = []
         count = 0
         for d in _data:
-            if modify:
-                for idx in range(len(get_key(d, "records"))):
-                    inject_record_id(data=d, record_id=record_id[count + idx], index=idx)
+            for idx in range(len(get_key(d, "records"))):
+                inject_record_id(data=d, record_id=record_id[count + idx], index=idx)
             response = self.session.put(
                 url=url,
                 data=json.dumps(d),
@@ -271,7 +257,7 @@ class AirtableAPI:
                 **kwargs
             )
             responses.append(response)
-            count += 10
+            count += self.maxUpload
 
         return responses
 
@@ -280,7 +266,7 @@ class AirtableAPI:
                record_id: List[str],
                **kwargs,
                ) -> Union[requests.models.Response, List[requests.models.Response]]:
-        """Deletes a Record from Airtable.
+        """Deletes a Record(s) from Airtable.
 
         Args:
             url (str): Valid Airtable Base or record
