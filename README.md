@@ -7,8 +7,16 @@
 Python API to interact with Airtable
 
 ### Table of Contents
-1. [Simple Interface](#simple-interface)
-2. [License](#license)
+1. [Installation](#installation) 
+2. [Simple Interface](#simple-interface) 
+3. [License](#license)
+
+
+### Installation
+AirtablPy is available on pypi. Install using pip.
+```bash
+pip install airtablepy
+```
 
 ### Simple Interface
 ```python
