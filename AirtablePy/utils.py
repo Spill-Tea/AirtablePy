@@ -149,7 +149,7 @@ def inject_record_id(data: dict, record_id: str, index: int = 0) -> None:
 
 
 def from_records(data: List[dict]) -> DataFrame:
-    """Converts data from a list or records into a pandas dataframe."""
+    """Converts data from a list or records into a dataframe."""
     records = []
     for d in data:
         temp = get_key(d, "fields")
