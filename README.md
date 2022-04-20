@@ -13,9 +13,9 @@ Python API to interact with Airtable
 
 
 ### Installation
-AirtablPy is available on pypi. Install using pip.
+AirtablPy is available on [pypi](https://pypi.org/project/AirtablePy/). Install using pip.
 ```bash
-pip install airtablepy
+pip install AirtablePy
 ```
 
 ### Simple Interface
