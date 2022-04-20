@@ -82,6 +82,16 @@ class AirtableAPI:
         }
         )
 
+    def close(self):
+        """Close out the request session.
+
+        Warning:
+            Enacting this method is irreversible, and will cause all methods interfacing
+            with airtable to fail.
+
+        """
+        self.session.close()
+
     def construct_url(self, base_id: str, table_id: str, record_id: Optional[str] = None) -> str:
         """Constructs a Valid Airtable API Link either to a table or record.
 
@@ -265,7 +275,7 @@ class AirtableAPI:
                url: str,
                record_id: List[str],
                **kwargs,
-               ) -> Union[requests.models.Response, List[requests.models.Response]]:
+               ) -> List[requests.models.Response]:
         """Deletes a Record(s) from Airtable.
 
         Args:
