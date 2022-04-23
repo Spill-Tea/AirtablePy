@@ -30,6 +30,7 @@ import yaml
 from pathlib import Path
 from typing import Any, Optional
 
+
 with Path(__file__).parent.joinpath("airtable_filters.yml").open("r") as f:
     formulas = yaml.load(f, Loader=yaml.SafeLoader)
 
