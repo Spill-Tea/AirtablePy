@@ -62,7 +62,5 @@ response_delete = api.delete(url=url, record_id=record_ids)
 
 ```
 
-
-
 ### License
 [MIT](./LICENSE)
