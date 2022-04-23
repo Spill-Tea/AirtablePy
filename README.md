@@ -8,8 +8,9 @@ Python API to interact with Airtable
 
 ### Table of Contents
 1. [Installation](#installation) 
-2. [Simple Interface](#simple-interface) 
-3. [License](#license)
+2. [API Token](#api-token)
+3. [Simple Interface](#simple-interface)
+4. [License](#license)
 
 
 ### Installation
@@ -17,6 +18,10 @@ AirtablPy is available on [pypi](https://pypi.org/project/AirtablePy/). Install 
 ```bash
 pip install AirtablePy
 ```
+
+### API Token
+To use the Airtable API, you need a valid [token](https://support.airtable.com/hc/en-us/articles/219046777-How-do-I-get-my-API-key-).
+You may setup an environment variable called `AIRTABLE_API_KEY` which this interface will use.
 
 ### Simple Interface
 ```python
@@ -26,6 +31,7 @@ from AirtablePy.utils import retrieve_keys
 from AirtablePy.query import date_query
 
 # Instantiate interface with valid token.
+# If token is not specified, it will search for environment variable AIRTABLE_API_KEY
 api = AirtableAPI(token="keyXXXXXXXXXXXXXX")
 
 # Construct a valid url
@@ -55,6 +61,8 @@ response_replace = api.replace(url=url, data=data_replace, record_id=record_ids)
 response_delete = api.delete(url=url, record_id=record_ids)
 
 ```
+
+
 
 ### License
 [MIT](./LICENSE)
