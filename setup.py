@@ -112,7 +112,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
@@ -163,9 +163,10 @@ setup(
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'requests',
-        'responses',
-        'pandas',
+        "requests",
+        "responses",
+        "pandas",
+        "pyyaml"
     ],
 
     # List additional groups of dependencies here (e.g. development
@@ -186,9 +187,9 @@ setup(
     #
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
-    # package_data={  # Optional
-
-    # },
+    package_data={  # Optional
+        "AirtablePy": ["airtable_filters.yml"]
+    },
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:

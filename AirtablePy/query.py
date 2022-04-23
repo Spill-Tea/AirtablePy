@@ -26,28 +26,60 @@
 
 """""
 # Python Dependencies
-from typing import Optional
+import yaml
+from pathlib import Path
+from typing import Any, Optional
+
+with Path(__file__).parent.joinpath("airtable_filters.yml").open("r") as f:
+    formulas = yaml.load(f, Loader=yaml.SafeLoader)
 
 
-def is_formula(value: str):
-    """Checks if value is an Airtable Formula (one which does not require arguments)."""
-    if value in ["NOW()", "TODAY()", "FALSE()", "TRUE()", "CREATED_TIME()", "RECORD_ID()", "ERROR()", "BLANK()"]:
+def _check_formula(value: Any) -> bool:
+    if value in formulas["fields"]["no args"]:
+        return True
+    if any([value.startswith(i) for i in formulas["fields"]["args"]]):
+        return True
+    return False
+
+
+def is_formula(value: Any):
+    """Checks if value is an Airtable Formula (one which does not require arguments) or int/float."""
+    if isinstance(value, (int, float)):
+        return value
+    if _check_formula(value):
         return value
     return f"{value!r}"
 
 
 def is_column(value: str):
     """Checks if value is an Airtable Formula (which refers to a field, or modifications thereof)."""
-    special = ["CREATED_TIME()", "RECORD_ID()", "DATETIME_PARSE("]
-    if any([value.startswith(i) for i in special]):
+    if _check_formula(value):
         return value
     return "{%s}" % value
 
 
 def merge_queries(kind: str, /, *args):
-    """Create an AND / OR Query"""
-    assert kind.upper() in ["OR", "AND"]
+    """Creates an AND / OR / NOT Query."""
+    assert kind.upper() in ["OR", "AND", "NOT"]
     return f"{kind.upper()}({', '.join(args)})"
+
+
+def arithmetic(column: str, comparison: str, value: Any) -> str:
+    """Constructs an arithmetic Operator Comparison Query.
+
+    Args:
+        column (str): column name
+        comparison (str): Arithmetic operator: "<" | "<=" | "=" | "!=" | ">=" | ">"
+        value (Any): value to compare to
+
+    Returns:
+        (str) airtable formatted operator query
+
+    Notes:
+        - "!=" operator may not work as expected here. Consider using NOT() query instead.
+
+    """
+    return f"{is_column(column)} {comparison} {is_formula(value)}"
 
 
 def date_query(column_name: str,
@@ -61,7 +93,8 @@ def date_query(column_name: str,
         column_name (str): Name of Column in a table Defining a Date
         start (str): Optional Arg indicating Start Date (Inclusive).
         end (str): Optional Arg indication End Date (Inclusive)
-        comparison (str): Defines how truth of date equality are compared
+        comparison (str): Defines the truth of date equality is discerned
+            - "second" | "hour" | "day" | "month" | "year"
 
     Returns:
         (str) Complete Airtable Compatible Date Query
