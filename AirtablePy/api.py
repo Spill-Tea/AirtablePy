@@ -24,8 +24,6 @@
 
 """
 # Python Dependencies
-import logging
-
 import os
 import json
 import requests
@@ -38,19 +36,6 @@ from .utils import get_key
 from .utils import parcels
 from .utils import convert_upload
 from .utils import inject_record_id
-
-# Create logger
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-# Create stream
-stream = logging.StreamHandler()
-stream.setLevel(logging.DEBUG)
-
-# Create Formatter
-formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s")
-stream.setFormatter(formatter)
-logger.addHandler(stream)
 
 
 class AirtableAPI:
@@ -105,7 +90,6 @@ class AirtableAPI:
             with airtable to fail.
 
         """
-        logger.info("Session Closed.")
         self.session.close()
 
     def construct_url(self, base_id: str, table_id: str, record_id: Optional[str] = None) -> str:
@@ -149,7 +133,6 @@ class AirtableAPI:
             (list) A List of Dictionary Records from a give table
 
         """
-        logger.info("Retrieving Records.")
         data = []
 
         while 1:
@@ -193,7 +176,6 @@ class AirtableAPI:
             - Submitting a Request Multiple times will create multiple (duplicated) entries.
 
         """
-        logger.info("Pushing Records.")
         data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
         for d in data:
@@ -229,7 +211,6 @@ class AirtableAPI:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
-        logger.info("Updating Records.")
         _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
 
@@ -272,7 +253,6 @@ class AirtableAPI:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
-        logger.info("Replacing Records.")
         _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
 
         responses = []
@@ -310,7 +290,6 @@ class AirtableAPI:
             as None.
 
         """
-        logger.info("Deleting Records.")
         responses = []
 
         for j in parcels(record_id, self.maxUpload):
