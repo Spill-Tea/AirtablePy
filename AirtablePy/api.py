@@ -70,7 +70,7 @@ class AirtableAPI:
 
     @token.setter
     def token(self, value):
-        value = value or os.environ.get("AIRTABLE_API_TOKEN")
+        value = value or os.environ.get("AIRTABLE_API_KEY")
         check_key(value, "API Key")
         self._update_header(value)
         self._token = value
@@ -290,7 +290,6 @@ class AirtableAPI:
             as None.
 
         """
-
         responses = []
 
         for j in parcels(record_id, self.maxUpload):

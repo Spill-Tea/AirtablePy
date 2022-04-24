@@ -33,4 +33,4 @@ from .utils import retrieve_keys  # noqa
 
 __all__ = [i for i in dir() if not i.startswith("_")]
 
-__version__ = "0.01.01"
+__version__ = "0.01.02"
