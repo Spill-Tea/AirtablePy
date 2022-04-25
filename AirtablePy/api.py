@@ -205,10 +205,10 @@ class AirtableAPI:
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
 
         Returns:
-            (requests.models.Response) Response from Airtable
+            (List[requests.models.Response]) Response(s) from Airtable
 
         Raises:
-            ValueError: When data is not of type str | dict | or pd.DataFrame
+            ValueError: When data is not of type dict | pd.DataFrame
 
         """
         _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
@@ -247,7 +247,7 @@ class AirtableAPI:
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
 
         Returns:
-            (requests.models.Response) Response from Airtable
+            (List[requests.models.Response]) Response(s) from Airtable
 
         Raises:
             ValueError: When data is not of type str | dict | or pd.DataFrame
@@ -283,20 +283,30 @@ class AirtableAPI:
             record_id (list): List of Valid Record ID(s)
 
         Returns:
-            (requests.models.Response)
-
-        Notes:
-            -To submit a batch request, pass params={"records": record_ids}, and keep record_id
-            as None.
+            (List[requests.models.Response]) Response(s) from Airtable
 
         """
+        assert len(record_id) >= 1, "Must provide a list of record ids."
+        original_url = url
         responses = []
 
         for j in parcels(record_id, self.maxUpload):
+            # if only one record is provided, we receive an error message
+            # So we do this workaround (which will occur when we have 1, 11, 21, 31 ... records)
+            if len(j) == 1:
+                # In the funny case where maxUpload is set to 1, we need to refer to original url
+                url = f"{original_url}{j[0]}" if url.endswith("/") else f"{original_url}/{j[0]}"
+                try:
+                    # when we only have 1 record id, there will be no previous params keyword
+                    kwargs.pop("params")
+                except KeyError:
+                    pass
+            else:
+                kwargs.update(dict(params={"records": j}))
+
             response = self.session.delete(
                 url=url,
                 timeout=self.timeout,
-                params={"records": j},
                 **kwargs
             )
             responses.append(response)
