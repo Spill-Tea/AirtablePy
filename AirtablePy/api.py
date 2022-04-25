@@ -124,7 +124,7 @@ class AirtableAPI:
             fields: Optional[List[str]] = None,
             **kwargs
             ) -> List[dict]:
-        """Iteratively Retrieve all Records from a given Table.
+        """Iteratively Retrieve Records from a given Table.
 
         Args:
             url (str): Valid Airtable link
@@ -134,7 +134,7 @@ class AirtableAPI:
             fields (list): Optional list of column names to limit return
 
         Returns:
-            (list) A List of Dictionary Records from a give table
+            (List[dict]) A List of Dictionary Records from a give table
 
         """
         data = []
@@ -165,7 +165,7 @@ class AirtableAPI:
              typecast: bool = True,
              **kwargs
              ):
-        """Posts a Single Record to Airtable.
+        """Posts Record(s) to Airtable.
 
         Args:
             url (str): Valid Airtable Base
@@ -200,7 +200,7 @@ class AirtableAPI:
                typecast: bool = True,
                **kwargs
                ) -> List[requests.models.Response]:
-        """Modifies a Single existing Record inplace.
+        """Modifies existing Record(s) inplace.
 
         Args:
             url (str): Valid Airtable Base
@@ -243,7 +243,7 @@ class AirtableAPI:
                 typecast: bool = True,
                 **kwargs
                 ) -> List[requests.models.Response]:
-        """Overwrites an existing Record.
+        """Overwrites existing Record(s).
 
         Args:
             url (str): Valid Airtable Base
@@ -283,7 +283,7 @@ class AirtableAPI:
                record_id: List[str],
                **kwargs,
                ) -> List[requests.models.Response]:
-        """Deletes a Record(s) from Airtable.
+        """Deletes Record(s) from Airtable.
 
         Args:
             url (str): Valid Airtable Base or record
