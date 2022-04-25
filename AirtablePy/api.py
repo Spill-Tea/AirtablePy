@@ -82,6 +82,10 @@ class AirtableAPI:
         }
         )
 
+    def _check_upload_limit(self):
+        if self.maxUpload <= 0:
+            raise ValueError(f"Must define a valid Maximum Upload Limit: {self.maxUpload}")
+
     def close(self):
         """Close out the request session.
 
@@ -120,7 +124,7 @@ class AirtableAPI:
             fields: Optional[List[str]] = None,
             **kwargs
             ) -> List[dict]:
-        """Iteratively Retrieve all Records from a given Table.
+        """Iteratively Retrieves Records from a given Table.
 
         Args:
             url (str): Valid Airtable link
@@ -130,7 +134,7 @@ class AirtableAPI:
             fields (list): Optional list of column names to limit return
 
         Returns:
-            (list) A List of Dictionary Records from a give table
+            (List[dict]) A List of Dictionary Records from a give table
 
         """
         data = []
@@ -161,7 +165,7 @@ class AirtableAPI:
              typecast: bool = True,
              **kwargs
              ):
-        """Posts a Single Record to Airtable.
+        """Posts Record(s) to Airtable.
 
         Args:
             url (str): Valid Airtable Base
@@ -176,6 +180,7 @@ class AirtableAPI:
             - Submitting a Request Multiple times will create multiple (duplicated) entries.
 
         """
+        self._check_upload_limit()
         data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
         for d in data:
@@ -195,7 +200,7 @@ class AirtableAPI:
                typecast: bool = True,
                **kwargs
                ) -> List[requests.models.Response]:
-        """Modifies a Single existing Record inplace.
+        """Modifies existing Record(s) inplace.
 
         Args:
             url (str): Valid Airtable Base
@@ -205,12 +210,13 @@ class AirtableAPI:
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
 
         Returns:
-            (requests.models.Response) Response from Airtable
+            (List[requests.models.Response]) Response(s) from Airtable
 
         Raises:
-            ValueError: When data is not of type str | dict | or pd.DataFrame
+            ValueError: When data is not of type dict | pd.DataFrame
 
         """
+        self._check_upload_limit()
         _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
 
@@ -237,7 +243,7 @@ class AirtableAPI:
                 typecast: bool = True,
                 **kwargs
                 ) -> List[requests.models.Response]:
-        """Overwrites an existing Record.
+        """Overwrites existing Record(s).
 
         Args:
             url (str): Valid Airtable Base
@@ -247,12 +253,13 @@ class AirtableAPI:
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
 
         Returns:
-            (requests.models.Response) Response from Airtable
+            (List[requests.models.Response]) Response(s) from Airtable
 
         Raises:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
+        self._check_upload_limit()
         _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
 
         responses = []
@@ -276,27 +283,40 @@ class AirtableAPI:
                record_id: List[str],
                **kwargs,
                ) -> List[requests.models.Response]:
-        """Deletes a Record(s) from Airtable.
+        """Deletes Record(s) from Airtable.
 
         Args:
             url (str): Valid Airtable Base or record
             record_id (list): List of Valid Record ID(s)
 
         Returns:
-            (requests.models.Response)
-
-        Notes:
-            -To submit a batch request, pass params={"records": record_ids}, and keep record_id
-            as None.
+            (List[requests.models.Response]) Response(s) from Airtable
 
         """
+        # Sanity Checks
+        self._check_upload_limit()
+        assert len(record_id) >= 1, "Must provide a list of record ids."
+
+        # Preparation
+        original_url = url
         responses = []
 
         for j in parcels(record_id, self.maxUpload):
+            # The params records keyword fails when only one record is provided (len(j) % self.maxUpload == 1)
+            if len(j) == 1:
+                # In the funny case where maxUpload is set to 1, we need to refer to original url
+                url = f"{original_url}{j[0]}" if url.endswith("/") else f"{original_url}/{j[0]}"
+                try:
+                    # when a single record id, there will be no previous params keyword
+                    kwargs.pop("params")
+                except KeyError:
+                    pass
+            else:
+                kwargs.update(dict(params={"records": j}))
+
             response = self.session.delete(
                 url=url,
                 timeout=self.timeout,
-                params={"records": j},
                 **kwargs
             )
             responses.append(response)

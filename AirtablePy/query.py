@@ -38,21 +38,23 @@ with Path(__file__).parent.joinpath("airtable_filters.yml").open("r") as f:
 def _check_formula(value: Any) -> bool:
     if value in formulas["fields"]["no args"]:
         return True
-    if any([value.startswith(i) for i in formulas["fields"]["args"]]):
-        return True
+
+    for i in formulas["fields"]["args"]:
+        if value.startswith(i):
+            return True
+
     return False
 
 
-def is_formula(value: Any):
+def is_formula(value: Any) -> Any:
     """Checks if value is an Airtable Formula (one which does not require arguments) or int/float."""
-    if isinstance(value, (int, float)):
+    if isinstance(value, (int, float)) or _check_formula(value):
         return value
-    if _check_formula(value):
-        return value
+
     return f"{value!r}"
 
 
-def is_column(value: str):
+def is_column(value: str) -> Any:
     """Checks if value is an Airtable Formula (which refers to a field, or modifications thereof)."""
     if _check_formula(value):
         return value
@@ -61,8 +63,11 @@ def is_column(value: str):
 
 def merge_queries(kind: str, /, *args):
     """Creates an AND / OR / NOT Query."""
-    assert kind.upper() in ["OR", "AND", "NOT"]
-    return f"{kind.upper()}({', '.join(args)})"
+    kind = kind.upper()
+    assert kind in ["OR", "AND", "NOT"]
+    if kind == "NOT" and len(args) != 1:
+        raise ValueError(f"NOT Queries only take one argument: {args}")
+    return f"{kind}({', '.join(args)})"
 
 
 def arithmetic(column: str, comparison: str, value: Any) -> str:
@@ -87,7 +92,7 @@ def date_query(column_name: str,
                start: Optional[str] = None,
                end: Optional[str] = None,
                comparison: str = "day"
-               ):
+               ) -> str:
     """Constructs an Inclusive Date Query.
 
     Args:

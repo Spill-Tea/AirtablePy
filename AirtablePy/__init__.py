@@ -25,6 +25,7 @@
 """
 from .api import AirtableAPI  # noqa
 from .query import date_query  # noqa
+from .query import merge_queries  # noqa
 from .utils import check_key  # noqa
 from .utils import convert_upload  # noqa
 from .utils import get_key  # noqa
@@ -33,4 +34,4 @@ from .utils import retrieve_keys  # noqa
 
 __all__ = [i for i in dir() if not i.startswith("_")]
 
-__version__ = "0.01.02"
+__version__ = "0.01.03"

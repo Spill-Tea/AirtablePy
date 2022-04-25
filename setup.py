@@ -112,19 +112,19 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        "Development Status :: 4 - Beta",
 
         # Indicate who your project is intended for
-        'Intended Audience :: Developers',
+        "Intended Audience :: Developers",
 
         # Pick your license as you wish
-        'License :: OSI Approved :: MIT License',
+        "License :: OSI Approved :: MIT License",
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         # These classifiers are *not* checked by 'pip install'. See instead
         # 'python_requires' below.
-        'Programming Language :: Python :: 3',
+        "Programming Language :: Python :: 3",
 
     ],
 
@@ -132,7 +132,7 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='airtable api requests',  # Optional
+    keywords="airtable api requests",  # Optional
 
     # When your source code is in a subdirectory under the project root, e.g.
     # `src/`, it is necessary to specify the `package_dir` argument.
@@ -154,7 +154,7 @@ setup(
     # and refuse to install the project if the version does not match. If you
     # do not support Python 2, you can simplify this to '>=3.5' or similar, see
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-    python_requires='>=3.8',
+    python_requires=">=3.8",
 
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is
@@ -219,7 +219,7 @@ setup(
     # maintainers, and where to support the project financially. The key is
     # what's used to render the link text on PyPI.
     project_urls={  # Optional
-        'Bug Reports': 'https://github.com/Spill-Tea/AirtablePy/issues',
+        "Bug Reports": "https://github.com/Spill-Tea/AirtablePy/issues",
         # 'Funding': 'https://donate.pypi.org',
         # 'Say Thanks!': 'http://saythanks.io/to/example',
         # 'Source': 'https://github.com/pypa/sampleproject/',
