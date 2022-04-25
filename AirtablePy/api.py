@@ -82,6 +82,10 @@ class AirtableAPI:
         }
         )
 
+    def _check_upload_limit(self):
+        if self.maxUpload <= 0:
+            raise ValueError(f"Must define a valid Maximum Upload Limit: {self.maxUpload}")
+
     def close(self):
         """Close out the request session.
 
@@ -176,6 +180,7 @@ class AirtableAPI:
             - Submitting a Request Multiple times will create multiple (duplicated) entries.
 
         """
+        self._check_upload_limit()
         data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
         for d in data:
@@ -211,6 +216,7 @@ class AirtableAPI:
             ValueError: When data is not of type dict | pd.DataFrame
 
         """
+        self._check_upload_limit()
         _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
 
@@ -253,6 +259,7 @@ class AirtableAPI:
             ValueError: When data is not of type str | dict | or pd.DataFrame
 
         """
+        self._check_upload_limit()
         _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
 
         responses = []
@@ -286,7 +293,11 @@ class AirtableAPI:
             (List[requests.models.Response]) Response(s) from Airtable
 
         """
+        # Sanity Checks
+        self._check_upload_limit()
         assert len(record_id) >= 1, "Must provide a list of record ids."
+
+        # Preparation
         original_url = url
         responses = []
 
