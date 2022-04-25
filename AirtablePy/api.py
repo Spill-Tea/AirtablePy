@@ -124,7 +124,7 @@ class AirtableAPI:
             fields: Optional[List[str]] = None,
             **kwargs
             ) -> List[dict]:
-        """Iteratively Retrieve Records from a given Table.
+        """Iteratively Retrieves Records from a given Table.
 
         Args:
             url (str): Valid Airtable link
@@ -302,13 +302,12 @@ class AirtableAPI:
         responses = []
 
         for j in parcels(record_id, self.maxUpload):
-            # if only one record is provided, we receive an error message
-            # So we do this workaround (which will occur when we have 1, 11, 21, 31 ... records)
+            # The params records keyword fails when only one record is provided (len(j) % self.maxUpload == 1)
             if len(j) == 1:
                 # In the funny case where maxUpload is set to 1, we need to refer to original url
                 url = f"{original_url}{j[0]}" if url.endswith("/") else f"{original_url}/{j[0]}"
                 try:
-                    # when we only have 1 record id, there will be no previous params keyword
+                    # when a single record id, there will be no previous params keyword
                     kwargs.pop("params")
                 except KeyError:
                     pass
