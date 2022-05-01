@@ -134,7 +134,7 @@ class AirtableAPI:
             fields (list): Optional list of column names to limit return
 
         Returns:
-            (List[dict]) A List of Dictionary Records from a give table
+            (List[dict]) A List of Dictionary Records from a given table
 
         """
         data = []
@@ -206,7 +206,7 @@ class AirtableAPI:
             url (str): Valid Airtable Base
             data (dict | DataFrame): data to update
             typecast (bool): Coerce data type to cast during upload.
-            record_id (str): Valid Record ID
+            record_id (str): Valid Record ID(s)
             kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
 
         Returns:
@@ -256,7 +256,7 @@ class AirtableAPI:
             (List[requests.models.Response]) Response(s) from Airtable
 
         Raises:
-            ValueError: When data is not of type str | dict | or pd.DataFrame
+            ValueError: When data is not of type dict | pd.DataFrame
 
         """
         self._check_upload_limit()
