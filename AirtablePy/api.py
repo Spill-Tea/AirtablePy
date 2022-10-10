@@ -200,7 +200,7 @@ class AirtableAPI:
                typecast: bool = True,
                **kwargs
                ) -> List[requests.models.Response]:
-        """Modifies existing Record(s) inplace.
+        """Modifies (Patches) existing Record(s) inplace.
 
         Args:
             url (str): Valid Airtable Base
@@ -243,7 +243,7 @@ class AirtableAPI:
                 typecast: bool = True,
                 **kwargs
                 ) -> List[requests.models.Response]:
-        """Overwrites existing Record(s).
+        """Overwrites (Puts) existing Record(s).
 
         Args:
             url (str): Valid Airtable Base

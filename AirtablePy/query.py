@@ -112,7 +112,7 @@ def date_query(column_name: str,
 
     Raises:
         - ValueError: When a column name is not defined
-        - ValueError: When neither a start or end date is not defined.
+        - ValueError: When neither a start nor end date is defined.
 
     """
     # Sanity Checks
