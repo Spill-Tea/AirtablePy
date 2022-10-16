@@ -108,7 +108,7 @@ def date_query(column_name: str,
     Notes:
         The Date may be provided in the following formats:
             - YYYYMMDD HH:MM:SS.0
-            - MM/DD/YYY HH:MM:SS.0
+            - MM/DD/YYYY HH:MM:SS.0
 
     Raises:
         - ValueError: When a column name is not defined
@@ -120,6 +120,8 @@ def date_query(column_name: str,
         raise ValueError(f"Must Define a Column Name: {column_name}")
     if start is None and end is None:
         raise ValueError(f"Must Define Either Start or End Dates.")
+    if comparison not in ["second", "hour", "day", "month", "year"]:
+        raise ValueError(f"Invalid Comparison: {comparison}")
 
     column = is_column(column_name)
 
