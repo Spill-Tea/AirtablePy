@@ -26,7 +26,7 @@
 # Python Dependencies
 import requests
 
-from typing import Any, List, Union
+from typing import Any, Iterator, List, Union
 from pandas import DataFrame
 
 
@@ -69,8 +69,8 @@ def convert_upload(data: Union[dict, DataFrame], typecast: bool, limit: int = 10
         raise ValueError(f"Invalid Data Format for Upload: {type(data)}")
 
 
-def parcels(iterable: list, chunks: int = 10) -> list:
-    """Meter out an iterable object by defined chunk size (i.e. api upload limit)"""
+def parcels(iterable: list, chunks: int = 10) -> Iterator[List[dict]]:
+    """Meters out an iterable object by defined chunk size (i.e. api upload limit)"""
     for i in range(0, len(iterable), chunks):
         yield iterable[i: i + chunks]
 
@@ -153,10 +153,7 @@ def from_records(data: List[dict]) -> DataFrame:
     records = []
     for d in data:
         temp = get_key(d, "fields")
-        temp.update({
-            "id": get_key(d, "id"),
-            "createdTime": get_key(d, "createdTime")
-        })
+        temp.update({key: get_key(d, key) for key in ["id", "createdTime"]})
         records.append(temp)
 
     return DataFrame.from_records(records)
