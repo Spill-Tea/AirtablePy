@@ -64,6 +64,10 @@ class AirtableAPI:
 
         self.base_url = f"{self._base_url}{version}/"
 
+    def __del__(self):
+        """Closes the Request Session on Garbage Collection."""
+        self.close()
+
     @property
     def token(self):
         return self._token
@@ -87,7 +91,7 @@ class AirtableAPI:
             raise ValueError(f"Must define a valid Maximum Upload Limit: {self.maxUpload}")
 
     def close(self):
-        """Close out the request session.
+        """Closes out the request session.
 
         Warning:
             Enacting this method is irreversible, and will cause all methods interfacing
@@ -250,7 +254,7 @@ class AirtableAPI:
             data (dict | DataFrame): _
             typecast (bool): Coerce data type to cast during upload.
             record_id (list): Valid Record ID(s)
-            kwargs (Any): Any addition keyword Arguments are fed directly to requests.patch method.
+            kwargs (Any): Any additional keyword Arguments are fed directly to requests.patch method.
 
         Returns:
             (List[requests.models.Response]) Response(s) from Airtable
