@@ -31,11 +31,7 @@ import requests
 from typing import List, Optional, Tuple, Union
 from pandas import DataFrame
 
-from .utils import check_key
-from .utils import get_key
-from .utils import parcels
-from .utils import convert_upload
-from .utils import inject_record_id
+from . import utils
 
 
 class AirtableAPI:
@@ -70,12 +66,13 @@ class AirtableAPI:
 
     @property
     def token(self):
+        """API Token"""
         return self._token
 
     @token.setter
     def token(self, value):
         value = value or os.environ.get("AIRTABLE_API_KEY")
-        check_key(value, "API Key")
+        utils.check_key(value, "API Key")
         self._update_header(value)
         self._token = value
 
@@ -112,10 +109,10 @@ class AirtableAPI:
             (str) Completed Airtable API link
 
         """
-        check_key(key=base_id, key_type="Base ID")
+        utils.check_key(key=base_id, key_type="Base ID")
 
         if record_id:
-            check_key(key=record_id, key_type="Record ID")
+            utils.check_key(key=record_id, key_type="Record ID")
             return f"{self.base_url}{base_id}/{table_id}/{record_id}"
 
         return f"{self.base_url}{base_id}/{table_id}"
@@ -155,8 +152,8 @@ class AirtableAPI:
                 timeout=self.timeout,
                 **kwargs
             )
-            offset = get_key(response, "offset")
-            data.extend(get_key(response, "records"))
+            offset = utils.get_key(response, "offset")
+            data.extend(utils.get_key(response, "records"))
 
             if offset is None:
                 break
@@ -185,7 +182,7 @@ class AirtableAPI:
 
         """
         self._check_upload_limit()
-        data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
+        data = utils.convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
         for d in data:
             response = self.session.post(
@@ -221,13 +218,13 @@ class AirtableAPI:
 
         """
         self._check_upload_limit()
-        _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
+        _data = utils.convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
         responses = []
 
         count = 0
         for d in _data:
-            for idx in range(len(get_key(d, "records"))):
-                inject_record_id(data=d, record_id=record_id[count + idx], index=idx)
+            for idx in range(len(utils.get_key(d, "records"))):
+                utils.inject_record_id(data=d, record_id=record_id[count + idx], index=idx)
 
             response = self.session.patch(
                 url=url,
@@ -264,13 +261,13 @@ class AirtableAPI:
 
         """
         self._check_upload_limit()
-        _data = convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
+        _data = utils.convert_upload(data=data, typecast=typecast, limit=self.maxUpload)
 
         responses = []
         count = 0
         for d in _data:
-            for idx in range(len(get_key(d, "records"))):
-                inject_record_id(data=d, record_id=record_id[count + idx], index=idx)
+            for idx in range(len(utils.get_key(d, "records"))):
+                utils.inject_record_id(data=d, record_id=record_id[count + idx], index=idx)
             response = self.session.put(
                 url=url,
                 data=json.dumps(d),
@@ -305,16 +302,12 @@ class AirtableAPI:
         original_url = url
         responses = []
 
-        for j in parcels(record_id, self.maxUpload):
+        for j in utils.parcels(record_id, self.maxUpload):
             # The params records keyword fails when only one record is provided (len(j) % self.maxUpload == 1)
             if len(j) == 1:
                 # In the funny case where maxUpload is set to 1, we need to refer to original url
                 url = f"{original_url}{j[0]}" if url.endswith("/") else f"{original_url}/{j[0]}"
-                try:
-                    # when a single record id, there will be no previous params keyword
-                    kwargs.pop("params")
-                except KeyError:
-                    pass
+                kwargs.pop("params", None)
             else:
                 kwargs.update(dict(params={"records": j}))
 
