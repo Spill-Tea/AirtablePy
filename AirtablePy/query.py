@@ -100,7 +100,7 @@ def date_query(column_name: str,
         start (str): Optional Arg indicating Start Date (Inclusive).
         end (str): Optional Arg indication End Date (Inclusive)
         comparison (str): Defines the truth of date equality is discerned
-            - "second" | "hour" | "day" | "month" | "year"
+            - Options: "second" | "hour" | "day" | "month" | "year"
 
     Returns:
         (str) Complete Airtable Compatible Date Query
@@ -108,18 +108,20 @@ def date_query(column_name: str,
     Notes:
         The Date may be provided in the following formats:
             - YYYYMMDD HH:MM:SS.0
-            - MM/DD/YYY HH:MM:SS.0
+            - MM/DD/YYYY HH:MM:SS.0
 
     Raises:
         - ValueError: When a column name is not defined
-        - ValueError: When neither a start or end date is not defined.
+        - ValueError: When neither a start nor end date is defined.
 
     """
     # Sanity Checks
     if column_name is None:
         raise ValueError(f"Must Define a Column Name: {column_name}")
     if start is None and end is None:
-        raise ValueError(f"Must Define Either Start or End Dates: {start} - {end}")
+        raise ValueError(f"Must Define Either Start or End Dates.")
+    if comparison not in ["second", "hour", "day", "month", "year"]:
+        raise ValueError(f"Invalid Comparison: {comparison}")
 
     column = is_column(column_name)
 

@@ -53,7 +53,7 @@ setup(
     # There are some restrictions on what makes a valid project name
     # specification here:
     # https://packaging.python.org/specifications/core-metadata/#name
-    name='AirtablePy',
+    name="AirtablePy",
 
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
@@ -66,7 +66,7 @@ setup(
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#summary
-    description='Python API to interact with Airtable',
+    description="Python API to interact with Airtable",
 
     # This is an optional longer description of your project that represents
     # the body of text which users will see when they visit PyPI.
@@ -89,21 +89,24 @@ setup(
     #
     # This field corresponds to the "Description-Content-Type" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#description-content-type-optional
-    long_description_content_type='text/markdown',  # Optional (see note above)
+    long_description_content_type="text/markdown",  # Optional (see note above)
 
     # This should be a valid link to your project's main homepage.
     #
     # This field corresponds to the "Home-Page" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#home-page-optional
-    url='https://github.com/Spill-Tea/AirtablePy',  # Optional
+    url="https://github.com/Spill-Tea/AirtablePy",  # Optional
 
     # This should be your name or the name of the organization which owns the
     # project.
-    author='Spill-Tea',  # Optional
+    author="Spill-Tea",  # Optional
 
     # This should be a valid email address corresponding to the author listed
     # above.
-    author_email='spillthetea917@gmail.com',  # Optional
+    author_email="spillthetea917@gmail.com",  # Optional
+
+    # License
+    license="MIT License",
 
     # Classifiers help users find your project by categorizing it.
     # For a list of valid classifiers, see https://pypi.org/classifiers/
@@ -164,7 +167,6 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         "requests",
-        "responses",
         "pandas",
         "pyyaml"
     ],

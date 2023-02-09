@@ -12,17 +12,17 @@ from AirtablePy import utils
 
 
 @pytest.mark.parametrize("key, n, _type", [
-    ("app", 14, "Base ID"),
-    ("key", 14, "API Key"),
-    ("rec", 14, "Record ID"),
-    pytest.param("app", 13, "Base ID", marks=FAILURE),
-    pytest.param("app", 15, "Base ID", marks=FAILURE),
-    pytest.param("xxx", 14, "Base ID", marks=FAILURE),
-    pytest.param("key", 13, "API Key", marks=FAILURE),
-    pytest.param("key", 17, "API Key", marks=FAILURE),
-    pytest.param("tea", 14, "API Key", marks=FAILURE),
-    pytest.param("rec", 13, "Record ID", marks=FAILURE),
-    pytest.param("rec", 18, "Record ID", marks=FAILURE),
+    ("app", 14, "base"),
+    ("key", 14, "key"),
+    ("rec", 14, "record"),
+    pytest.param("app", 13, "base", marks=FAILURE),
+    pytest.param("app", 15, "base", marks=FAILURE),
+    pytest.param("xxx", 14, "base", marks=FAILURE),
+    pytest.param("key", 13, "key", marks=FAILURE),
+    pytest.param("key", 17, "key", marks=FAILURE),
+    pytest.param("tea", 14, "key", marks=FAILURE),
+    pytest.param("rec", 13, "record", marks=FAILURE),
+    pytest.param("rec", 18, "record", marks=FAILURE),
     pytest.param("", 17, "Invalid", marks=FAILURE),
     pytest.param("", 17, "Test", marks=FAILURE),
 ])
