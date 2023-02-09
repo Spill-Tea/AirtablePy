@@ -72,7 +72,7 @@ class AirtableAPI:
     @token.setter
     def token(self, value):
         value = value or os.environ.get("AIRTABLE_API_KEY")
-        utils.check_key(value, "API Key")
+        utils.check_key(value, "key")
         self._update_header(value)
         self._token = value
 
@@ -109,10 +109,10 @@ class AirtableAPI:
             (str) Completed Airtable API link
 
         """
-        utils.check_key(key=base_id, key_type="Base ID")
+        utils.check_key(key=base_id, key_type="base")
 
         if record_id:
-            utils.check_key(key=record_id, key_type="Record ID")
+            utils.check_key(key=record_id, key_type="record")
             return f"{self.base_url}{base_id}/{table_id}/{record_id}"
 
         return f"{self.base_url}{base_id}/{table_id}"
